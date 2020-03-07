@@ -3,7 +3,9 @@ const express = require("express"),
       mongoose = require('mongoose'),
       Lnk = require("./lnk"),
       bodyParser = require('body-parser'),
-      paginate = require('paginatejson');
+      paginate = require('paginatejson'),
+      {param, body, validationResult} = require("express-validator"),
+      v = require("./validation");
 
       
 app.use(bodyParser.json());
@@ -22,7 +24,7 @@ catch(e){
 
 
 
-app.post('/', async (req, res) => {
+app.post('/', v.vbody, async (req, res) => {
 
     let link = {
         title: req.body.title,
@@ -42,7 +44,10 @@ app.post('/', async (req, res) => {
     res.send(link);
 });
 
-app.get('/all/:page?',async (req, res) => {
+app.get('/all/:page?', v.vpage, async (req, res) => {
+    
+    
+    
     const page = req.params.page || 1;
     let lnks;
     try {
@@ -59,7 +64,10 @@ app.get('/all/:page?',async (req, res) => {
 
 });
 
-app.get('/:lid',async (req, res) => {
+app.get('/:lid', v.vlid, async (req, res, next) => {
+
+    
+
     const lnkid = req.params.lid;
     let lnk;
     console.log("searching for " + lnkid);
@@ -81,7 +89,7 @@ app.get('/:lid',async (req, res) => {
     res.end();
 });
 
-app.delete('/:lid', async (req, res) => {
+app.delete('/:lid', v.vlid, async (req, res) => {
     const lnkid = req.params.lid;
     if(lnkid === 'all' || lnkid === 'All') {
         try {
@@ -103,7 +111,7 @@ app.delete('/:lid', async (req, res) => {
     return res.send("URL "+lnkid+" deleted successfully!");
 });
 
-app.put('/:lid', async (req, res) => {
+app.put('/:lid', [v.vlid, v.vbody], async (req, res) => {
     
     let newLnk = {
         title: req.body.title,
@@ -132,7 +140,7 @@ app.put('/:lid', async (req, res) => {
     res.send(lnk);
 });
 
-app.get('/query/:lid', async (req, res) => {
+app.get('/query/:lid', v.vlid, async (req, res) => {
     const lnkid = req.params.lid;
     let lnk;
     console.log("searching for " + lnkid);
