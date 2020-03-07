@@ -4,7 +4,6 @@ const express = require("express"),
       Lnk = require("./lnk"),
       bodyParser = require('body-parser'),
       paginate = require('paginatejson'),
-      {param, body, validationResult} = require("express-validator"),
       v = require("./validation");
 
       
