@@ -39,10 +39,10 @@ app.post('/', async (req, res) => {
         return res.status(500).send(e.message);
     }
 
-    res.send("Hello World!");
+    res.send(link);
 });
 
-app.get('/all/:page?',async (req, res, next) => {
+app.get('/all/:page?',async (req, res) => {
     const page = req.params.page || 1;
     let lnks;
     try {
@@ -55,7 +55,7 @@ app.get('/all/:page?',async (req, res, next) => {
     if(!lnks)
         return res.status(404).send("no links found!");
     
-    res.send(paginate.paginate(lnks, page, 2));
+    res.send(paginate.paginate(lnks, page, 10));
 
 });
 
@@ -81,49 +81,55 @@ app.get('/:lid',async (req, res) => {
     res.end();
 });
 
-app.delete('/del/:lid', async (req, res) => {
+app.delete('/:lid', async (req, res) => {
     const lnkid = req.params.lid;
     if(lnkid === 'all' || lnkid === 'All') {
         try {
-            await Lnk.remove({});
+            await Lnk.deleteMany({});
         }
         catch(e) {
             return res.status(500).send(e.message);
         }
 
-        
+        res.send("All urls are deleted successfully! :)");
     }
-    let lnk;
+
     try{
-        await Lnk.deleteMany({lid: lnkid});
+        await Lnk.deleteOne({lid: lnkid});
     }
     catch(e) {
         return res.status(500).send(e.message);
     }
-    return res.send("done!");
+    return res.send("URL "+lnkid+" deleted successfully!");
 });
 
-app.put('/update/:lid', async (req, res) => {
-    const body = req.body;
-    let lnk = {
-        title: body.title,
-        lid: body.lid,
-        lnk: body.lnk
-    };
+app.put('/:lid', async (req, res) => {
     
-    try{
-        lnk = await Lnk.updateOne({lid: req.params.lid}, lnk);
+    let newLnk = {
+        title: req.body.title,
+        lid: req.body.lid,
+        lnk: req.body.lnk
+    };
+
+
+    try {
+        lnk = await Lnk.find({lid: req.params.lid});
     }
     catch(e) {
         return res.status(500).send(e.message);
     }
 
-    if(lnk.n === 0)
+    if(!lnk)
         return res.status(404).send("link not found!");
+    
+    try{
+        lnk = await Lnk.findOneAndUpdate({lid: req.params.lid}, newLnk);
+    }
+    catch(e) {
+        return res.status(500).send(e.message);
+    }
 
-
-
-    res.send("Done");
+    res.send(lnk);
 });
 
 app.get('/query/:lid', async (req, res) => {
