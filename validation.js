@@ -28,7 +28,7 @@ module.exports.vpage = [
 ];
 
 module.exports.vbody = [
-    body('title', 'title should be (between 3 and 225 characters long) string').isLength({min: 3, max: 255}),
+    body('title', 'title should be (between 3 and 255 characters long) string').isLength({min: 3, max: 255}),
     body('lid', 'lid should be alphanumeric.').isAlphanumeric(),
     body('lid', 'lid should be between 3 and 20 characters long.').isLength({min: 3, max: 20}),
     body('lnk', 'lnk should be a http or https URL').isURL({protocols: ["http", "https"], require_protocol: true}),

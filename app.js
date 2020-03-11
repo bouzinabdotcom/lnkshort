@@ -69,7 +69,7 @@ app.get('/:lid', v.vlid, async (req, res, next) => {
 
     const lnkid = req.params.lid;
     let lnk;
-    console.log("searching for " + lnkid);
+    //console.log("searching for " + lnkid);
     try{
         lnk = await Lnk.findOne({lid: lnkid});
     }
@@ -80,7 +80,7 @@ app.get('/:lid', v.vlid, async (req, res, next) => {
     if(!lnk)
         return res.status(404).send('link not found!');
 
-    console.log("redirecting to " + lnk.lnk)
+    //console.log("redirecting to " + lnk.lnk)
 
     res.writeHead(301,
         {Location: lnk.lnk}
@@ -90,7 +90,7 @@ app.get('/:lid', v.vlid, async (req, res, next) => {
 
 app.delete('/:lid', v.vlid, async (req, res) => {
     const lnkid = req.params.lid;
-    if(lnkid === 'all' || lnkid === 'All') {
+    if(lnkid === 'all') {
         try {
             await Lnk.deleteMany({});
         }
@@ -98,7 +98,7 @@ app.delete('/:lid', v.vlid, async (req, res) => {
             return res.status(500).send(e.message);
         }
 
-        res.send("All urls are deleted successfully! :)");
+        return res.send("All urls are deleted successfully! :)");
     }
 
     try{
@@ -118,9 +118,9 @@ app.put('/:lid', [v.vlid, v.vbody], async (req, res) => {
         lnk: req.body.lnk
     };
 
-
-    try {
-        lnk = await Lnk.find({lid: req.params.lid});
+    let lnk;
+    try{
+        lnk = await Lnk.findOneAndUpdate({lid: req.params.lid}, newLnk);
     }
     catch(e) {
         return res.status(500).send(e.message);
@@ -128,13 +128,8 @@ app.put('/:lid', [v.vlid, v.vbody], async (req, res) => {
 
     if(!lnk)
         return res.status(404).send("link not found!");
-    
-    try{
-        lnk = await Lnk.findOneAndUpdate({lid: req.params.lid}, newLnk);
-    }
-    catch(e) {
-        return res.status(500).send(e.message);
-    }
+
+
 
     res.send(lnk);
 });
