@@ -4,8 +4,9 @@ const express = require("express"),
   Lnk = require("./lnk"),
   bodyParser = require("body-parser"),
   paginate = require("paginatejson"),
-  v = require("./validation"),
-  user = require("./user/user-route");
+  v = require("./middleware/validation"),
+  user = require("./user/user-route"),
+  auth = require("./middleware/auth");
 
 app.use(bodyParser.json());
 app.use("/user", user);
@@ -23,14 +24,13 @@ try {
   console.log("Can't connect to database. \n" + e.message);
 }
 
-app.post("/", v.vbody, async (req, res) => {
-  let link = {
+app.post("/", [auth, v.vbody], async (req, res) => {
+  const link = new Lnk({
     title: req.body.title,
     lid: req.body.lid,
     lnk: req.body.lnk,
-  };
-
-  link = new Lnk(link);
+    user: req.user,
+  });
 
   try {
     await link.save();
@@ -41,11 +41,11 @@ app.post("/", v.vbody, async (req, res) => {
   res.send(link);
 });
 
-app.get("/all/:page?", v.vpage, async (req, res) => {
+app.get("/all/:page?", [auth, v.vpage], async (req, res) => {
   const page = req.params.page || 1;
   let lnks;
   try {
-    lnks = await Lnk.find();
+    lnks = await Lnk.find({ user: req.user });
   } catch (e) {
     return res.status(500).send(e.message);
   }
@@ -73,11 +73,19 @@ app.get("/:lid", v.vlid, async (req, res, next) => {
   res.end();
 });
 
-app.delete("/:lid", v.vlid, async (req, res) => {
+app.delete("/:lid", [auth, v.vlid], async (req, res) => {
   const lnkid = req.params.lid;
+  let lnk;
+  try {
+    lnk = await Lnk.findOne({ lid: lnkid, user: req.user });
+  } catch (e) {
+    return res.status(500).send(e.message);
+  }
+
+  if (!lnk) return res.status(404).send("link not found!");
   if (lnkid === "all") {
     try {
-      await Lnk.deleteMany({});
+      await Lnk.delete({ user: req.user });
     } catch (e) {
       return res.status(500).send(e.message);
     }
@@ -86,23 +94,27 @@ app.delete("/:lid", v.vlid, async (req, res) => {
   }
 
   try {
-    await Lnk.deleteOne({ lid: lnkid });
+    await Lnk.deleteOne({ lid: lnkid, user: req.user });
   } catch (e) {
     return res.status(500).send(e.message);
   }
   return res.send("URL " + lnkid + " deleted successfully!");
 });
 
-app.put("/:lid", [v.vlid, v.vbody], async (req, res) => {
+app.put("/:lid", [auth, v.vlid, v.vbody], async (req, res) => {
   let newLnk = {
     title: req.body.title,
     lid: req.body.lid,
     lnk: req.body.lnk,
+    user: req.user,
   };
 
   let lnk;
   try {
-    lnk = await Lnk.findOneAndUpdate({ lid: req.params.lid }, newLnk);
+    lnk = await Lnk.findOneAndUpdate(
+      { lid: req.params.lid, user: req.user },
+      newLnk
+    );
   } catch (e) {
     return res.status(500).send(e.message);
   }
@@ -112,12 +124,11 @@ app.put("/:lid", [v.vlid, v.vbody], async (req, res) => {
   res.send(lnk);
 });
 
-app.get("/query/:lid", v.vlid, async (req, res) => {
+app.get("/query/:lid", [auth, v.vlid], async (req, res) => {
   const lnkid = req.params.lid;
   let lnk;
-  console.log("searching for " + lnkid);
   try {
-    lnk = await Lnk.findOne({ lid: lnkid });
+    lnk = await Lnk.findOne({ lid: lnkid, user: req.user });
   } catch (e) {
     return res.status(500).send(e.message);
   }

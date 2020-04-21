@@ -20,6 +20,11 @@ const LnkSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  user: {
+    type: String,
+    required: true,
+    index: true,
+  },
 });
 
 const Lnk = mongoose.model("Lnk", LnkSchema);
