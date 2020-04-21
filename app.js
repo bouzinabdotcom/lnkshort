@@ -4,9 +4,11 @@ const express = require("express"),
   Lnk = require("./lnk"),
   bodyParser = require("body-parser"),
   paginate = require("paginatejson"),
-  v = require("./validation");
+  v = require("./validation"),
+  user = require("./user/user-route");
 
 app.use(bodyParser.json());
+app.use("/user", user);
 
 require("dotenv").config();
 
