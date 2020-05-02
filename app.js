@@ -7,7 +7,9 @@ const express = require("express"),
   v = require("./middleware/validation"),
   user = require("./user/user-route"),
   auth = require("./middleware/auth");
+cors = require("cors");
 
+app.use(cors());
 app.use(bodyParser.json());
 app.use("/user", user);
 
